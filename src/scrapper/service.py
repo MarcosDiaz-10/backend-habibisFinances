@@ -1,3 +1,4 @@
+from ast import List
 import requests
 from bs4 import BeautifulSoup
 
@@ -29,7 +30,7 @@ def getBinanceTasa():
     payload = {
         "assets": ["USDT"],
         "fiatCurrency": "VES",
-        "tradeType": "BUY",
+        "tradeType": "SELL",
         "fromUserRole": "USER",
     }
     try:
@@ -47,3 +48,42 @@ def getBinanceTasa():
         }
     except Exception as e:
         return {"msg": str(e), "error": True}
+
+def getBinanceTasaV2():
+    url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
+    payload = {
+       "additionalKycVerifyFilter": 0,
+       "asset": "USDT",
+       "classifies": ["mass", "profession", "fiat_trade"],
+       "countries": [],
+       "fiat": "VES",
+       "filterType": "all",
+       "followed": False,
+       "page": 1,
+       "payTypes": [],
+       "periods": [],
+       "proMerchantAds": False,
+       "publisherType": "merchant",
+       "rows": 2,
+       "shieldMerchantAds": False,
+       "tradeType": "BUY",
+       "tradedWith": False
+    }
+    try:
+        response = requests.post(url, json=payload,  timeout=10)
+        data=response.json()
+        if data["success"] is False:
+            return {
+                "msg": f"Failed to retrieve data from Binance. Error msg: {data['message']}",
+                "error": True,
+            }
+        return {
+            "price": f"{data['data'][1]['adv']['price']}",
+            "msg": "",
+            "error": False,
+        }
+
+    except Exception as e:
+        return {"msg": str(e), "error": True}
+
+   

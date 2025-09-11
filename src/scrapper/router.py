@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from asyncpg.connection import Connection
 from dependencies import getDbConnection
 
-from scrapper.service import getBcvTasa, getBinanceTasa
+from scrapper.service import getBcvTasa, getBinanceTasa, getBinanceTasaV2
 
 router = APIRouter(
     prefix="/scrapper",
@@ -12,12 +12,12 @@ router = APIRouter(
 
 
 @router.get("/bcv")
-async def get_bcv(conn: Connection = Depends(getDbConnection)):
+async def get_bcv():
     """
     Endpoint to get the BCV data.
     """
-    tiposDeTasa = await conn.fetch("Select * from finances.tipos_de_tasa;")
-    print(tiposDeTasa[0]["nombre_tasa"])
+    # tiposDeTasa = await conn.fetch("Select * from finances.tipos_de_tasa;")
+    # print(tiposDeTasa[0]["nombre_tasa"])
     databcv = getBcvTasa()
     if databcv["error"]:
         return {"msg": databcv["msg"], "error": True}
@@ -33,11 +33,11 @@ def get_binance():
     """
     Endpoint to get the Binace data.
     """
-    dataBinance = getBinanceTasa()
+    dataBinance = getBinanceTasaV2()
     if dataBinance["error"]:
         return {"msg": dataBinance["msg"], "error": True}
     return {
-        "msg": "",
+        "msg": '',
         "error": False,
-        "data": float(dataBinance["price"]),
+        "data":  float(dataBinance["price"].replace(",", ".")),
     }
