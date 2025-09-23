@@ -28,18 +28,29 @@ def createAccessToken(data: dict) -> str:
     return encodedJwt
 
 
-def createRefreshToken(data: dict) -> str:
+async def createRefreshToken(data: dict, conn: Connection) -> str:
     """Crea el token de refresco JWT"""
     toEncode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     toEncode.update({"exp": expire})
     encodedJwt = jwt.encode(toEncode, settings.SECRET_KEY, algorithm=settings.ALGORITHM_TOKEN)
-    return encodedJwt
+    try:
+        await conn.execute(
+            "INSERT INTO finances.refresh_tokens (token, id_user, expires_at) VALUES ($1, $2, $3)",
+            encodedJwt,
+            data["sub"],
+            expire.replace(tzinfo=None)  
+        )
+        return encodedJwt
+    except Exception as e:
+        print(f"Error al guardar el token de refresco: {e}")
+        return None
+    
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
-def getCurrentUser(
+async def getCurrentUser(
     token: Annotated[str, Depends(oauth2_scheme)],
     conn: Annotated[Connection, Depends(getDbConnection)]
 ):
@@ -59,7 +70,7 @@ def getCurrentUser(
     except JWTError:
         raise credentials_exception
    
-    user = conn.fetchrow("SELECT * FROM finances.usuarios WHERE id_user = $1", int(userId))
+    user = await conn.fetchrow("SELECT * FROM finances.usuarios WHERE id_user = $1", int(userId))
 
     if user is None:
         raise credentials_exception

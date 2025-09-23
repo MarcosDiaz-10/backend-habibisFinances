@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from asyncpg.connection import Connection
 from dependencies import getDbConnection
-from src.constants import respose_bad_request
+from constants import RESPONSE_BAD_REQUEST
 from scrapper.service import getBcvTasa, getBinanceTasa, getBinanceTasaV2
 
 router = APIRouter(
     prefix="/scrapper",
     tags=["scrapper"],
-    responses=respose_bad_request,
+    responses=RESPONSE_BAD_REQUEST,
 )
 
 
@@ -22,7 +22,10 @@ async def get_bcv(conn: Connection = Depends(getDbConnection)):
     tasa = float(databcv["price"].replace(",", "."))
     await conn.execute("INSERT INTO finances.historial_tasas (id_tipo_tasa, fecha,valor_tasa) VALUES (1, NOW(), $1);", tasa)
     if databcv["error"]:
-        return {"msg": databcv["msg"], "error": True}
+        raise HTTPException(
+            status_code=500,
+            detail={"msg": databcv["msg"], "error": True}
+        )
     return {
         "msg": "",
         "error": False,
@@ -39,7 +42,10 @@ async def get_binance(conn: Connection = Depends(getDbConnection)):
     tasa = float(dataBinance["price"].replace(",", "."))
     await conn.execute("INSERT INTO finances.historial_tasas (id_tipo_tasa, fecha,valor_tasa) VALUES (2, NOW(), $1);", tasa)
     if dataBinance["error"]:
-        return {"msg": dataBinance["msg"], "error": True}
+        raise HTTPException(
+            status_code=500,
+            detail={"msg": dataBinance["msg"], "error": True}
+        )
     return {
         "msg": '',
         "error": False,

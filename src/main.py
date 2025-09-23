@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from scrapper import router as scrapper
+from users import router as users
+from auth import router as auth
 from database import getDbPool, closeDbPool
 from utils.taskSaveTasas import taskSaveTasas
 import asyncio
@@ -19,3 +21,5 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(scrapper.router)
+app.include_router(users.router)
+app.include_router(auth.router)
