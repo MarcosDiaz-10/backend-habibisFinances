@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends
 from asyncpg.connection import Connection
 from dependencies import getDbConnection
-
+from src.constants import respose_bad_request
 from scrapper.service import getBcvTasa, getBinanceTasa, getBinanceTasaV2
 
 router = APIRouter(
     prefix="/scrapper",
     tags=["scrapper"],
-    responses={404: {"description": "Not found"}},
+    responses=respose_bad_request,
 )
 
 
